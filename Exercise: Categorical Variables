@@ -38,4 +38,42 @@ drop_X_valid = X_valid.select_dtypes(exclude='object')
 # Check your answers
 step_1.check()
 
+print("MAE from Approach 1 (Drop categorical variables):")
+print(score_dataset(drop_X_train, drop_X_valid, y_train, y_valid))
+# MAE from Approach 1 (Drop categorical variables):
+# 17837.82570776256
 
+print("Unique values in 'Condition2' column in training data:", X_train['Condition2'].unique())
+print("\nUnique values in 'Condition2' column in validation data:", X_valid['Condition2'].unique())
+# Unique values in 'Condition2' column in training data: ['Norm' 'PosA' 'Feedr' 'PosN' 'Artery' 'RRAe']
+# Unique values in 'Condition2' column in validation data: ['Norm' 'RRAn' 'RRNn' 'Artery' 'Feedr' 'PosN']
+
+# Categorical columns in the training data
+object_cols = [col for col in X_train.columns if X_train[col].dtype == "object"]
+
+# Columns that can be safely ordinal encoded
+good_label_cols = [col for col in object_cols if 
+                   set(X_valid[col]).issubset(set(X_train[col]))]
+        
+# Problematic columns that will be dropped from the dataset
+bad_label_cols = list(set(object_cols)-set(good_label_cols))
+        
+print('Categorical columns that will be ordinal encoded:', good_label_cols)
+print('\nCategorical columns that will be dropped from the dataset:', bad_label_cols)
+# Categorical columns that will be ordinal encoded: ['MSZoning', 'Street', 'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope', 'Neighborhood', 'Condition1', 'BldgType', 'HouseStyle', 'RoofStyle', 'Exterior1st', 'Exterior2nd', 'ExterQual', 'ExterCond', 'Foundation', 'Heating', 'HeatingQC', 'CentralAir', 'KitchenQual', 'PavedDrive', 'SaleType', 'SaleCondition']
+# Categorical columns that will be dropped from the dataset: ['Condition2', 'Functional', 'RoofMatl']
+
+from sklearn.preprocessing import OrdinalEncoder
+
+# Drop categorical columns that will not be encoded
+label_X_train = X_train.drop(bad_label_cols, axis=1)
+label_X_valid = X_valid.drop(bad_label_cols, axis=1)
+
+# Apply ordinal encoder
+# Your code here
+encoder = OrdinalEncoder()
+label_X_train[good_label_cols] = encoder.fit_transform(label_X_train[good_label_cols])
+label_X_valid[good_label_cols] = encoder.transform(label_X_valid[good_label_cols])
+print(score_dataset(label_X_train, label_X_valid, y_train, y_valid))
+# MAE from Approach 2 (Ordinal Encoding):
+# 17098.01649543379
